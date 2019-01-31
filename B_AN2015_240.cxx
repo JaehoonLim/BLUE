@@ -25,82 +25,108 @@ void B_AN2015_240(Int_t Flag = 0){
   //
   // Flag steers which of the results should be calculated
   //
-  // 0 == CEDM
-  // 0: all uncertainties
-  //
-  // 1-7 == Asymmetry
+  // 1-7
   // 1: un-correlated stat. uncertainties
-  // 2: un-correlated dilution uncertainties
-  // 3: 100% correlated dilution uncertainties
-  // 4: un-correlated sys. uncertainties
-  // 5: 100% correlated sys. uncertainties
+  // 2: un-correlated stat. and dilution uncertainties
+  // 3: un-correlated stat. uncertainties and 100% correlated dilution uncertainties
+  // 4: un-correlated stat. and sys. uncertainties
+  // 5: un-correlated stat. uncertainties and 100% correlated sys. uncertainties
   // 6: un-correlated all uncertainties
   // 7: un-correlated stat. uncertainties and 100% correlated dilution and sys. uncertainties
+  //
+  // 10: Asymmetry
+  // 20: Asymmetry (total uncertainties)
+  // 30: dtG
+  // 
+  // 100: O_1
+  // 300: O_3
+  //
   //-----------------------------------------------------------------------------
 
   // Print log option
   bool PrintLog = false;
 
   // Print Flag
-  const string FlagName[8] = {
-    "CEDM with all uncertianties",
-    "Asymmetry with un-correlated stat. uncertainties",
-    "Asymmetry with un-correlated dilution uncertainties",
-    "Asymmetry with 100% correlated dilution uncertainties",
-    "Asymmetry with un-correlated sys. uncertainties",
-    "Asymmetry with 100% correlated sys. uncertainties",
-    "Asymmetry with un-correlated all uncertainties",
-    "Asymmetry with un-correlated stat. uncertainties and 100% correlated dilution and sys. uncertainties"
+  const TString FlagName1[7] = {
+    " with un-correlated stat. uncertainties",
+    " with un-correlated stat. and dilution uncertainties",
+    " with un-correlated stat. uncertainties and 100% correlated dilution uncertainties",
+    " with un-correlated stat. and sys. uncertainties",
+    " with un-correlated stat. uncertainties and 100% correlated sys. uncertainties",
+    " with un-correlated all uncertainties",
+    " with un-correlated stat. uncertainties and 100% correlated dilution and sys. uncertainties"
+  };
+
+  const TString FlagName2[3] = {
+    " Asymmetry",
+    " Asymmetry (root sum squared)",
+    " dtG"
+  };
+
+  const TString FlagName3[3] = {
+    "O_1",
+    "",
+    "O_3"
   };
 
   // The number of estimates, uncertainties and observables
-  static const Int_t NumEst  = 6;
-  static const Int_t StatUnc = 1;
-  static const Int_t DiluUnc = 4;
-  static const Int_t SystUnc = 24;
-  static const Int_t NumObs  = 2;
-  Int_t NumUnc;
+  static const Int_t NumEst   = 3;
+  static const Int_t StatUnc  = 1;
+  static const Int_t ADiluUnc = 1;
+  static const Int_t EDiluUnc = 4;
+  static const Int_t ASystUnc = 1;
+  static const Int_t ESystUnc = 24;
+  static const Int_t NumObs   = 1;
+  Int_t DiluUnc = 0;
+  Int_t SystUnc = 0;
+  Int_t NumUnc = 0;
 
   // Index for which estimate determines which observable
   Int_t IWhichObs[NumEst] = {
-    0, 0, 0,  // O_1 mm, ee, em 
-    1, 1, 1,  // O_3 mm, ee, em
+    1, 1, 1
   };
 
   TString NamEst[NumEst] = {
-    "O_1 MuMu", "O_1 ElEl", "O_1 ElMu",
-    "O_3 MuMu", "O_3 ElEl", "O_3 ElMu"
+    "MuMu", "ElEl", "ElMu"
   };
 
-  TString NamObsCEDM[NumObs] = {"CEDM O_1",      "CEDM O_3"};
-  TString NamObsAsym[NumObs] = {"Asymmetry O_1", "Asymmetry O_3"};
+  Int_t Flag1 = Flag%10; 
+  Int_t Flag2 = (Flag%100)/10; 
+  Int_t Flag3 = Flag/100; 
 
   // Steer the input depending on Flag
-  if(Flag == 0 || Flag == 1){
+  if(Flag3 != 1 && Flag3 != 3){
+    printf("B_AN2015_240: Not implemented Flag IGNORED %2i \n", Flag);
+    return;
+  };
+
+  if(Flag2 == 1){
+    DiluUnc = EDiluUnc;
+    SystUnc = ESystUnc;
+  }else if(Flag2 == 2 || Flag2 == 3){
+    DiluUnc = ADiluUnc;
+    SystUnc = ASystUnc;
+  }else{
+    printf("B_AN2015_240: Not implemented Flag IGNORED %2i \n", Flag);
+    return;
+  };
+
+  if(Flag1 == 1){
     NumUnc = StatUnc;
-  }else if(Flag ==  2 || Flag ==  3){
+  }else if(Flag1 ==  2 || Flag1 ==  3){
     NumUnc = DiluUnc;
-  }else if(Flag ==  4 || Flag ==  5){
+  }else if(Flag1 ==  4 || Flag1 ==  5){
     NumUnc = SystUnc;
-  }else if(Flag ==  6 || Flag ==  7){
+  }else if(Flag1 ==  6 || Flag1 ==  7){
     NumUnc = StatUnc + DiluUnc + SystUnc;
   }else{
     printf("B_AN2015_240: Not implemented Flag IGNORED %2i \n", Flag);
     return;
-  }
-
-  // Fill estimates for CEDM stat. uncertainty
-  static const Int_t LenXEstStat = NumEst * (StatUnc+1);
-  Double_t XEstCEDM[LenXEstStat] = {
-    -1.20, 2.91,
-    -0.51, 2.75,
-     0.60, 1.07,
-    -1.10, 2.35,
-    -2.41, 3.58,
-    -1.23, 1.19
   };
 
+
   // Fill estimates for Asymmetry stat. uncertainties
+  static const Int_t LenXEstStat = 2 * NumEst * (StatUnc + 1);
   Double_t XEstStat[LenXEstStat] = {
     -0.0060, 0.0058,
     -0.0012, 0.0083,
@@ -110,96 +136,162 @@ void B_AN2015_240(Int_t Flag = 0){
     -0.0051, 0.0037
   };
 
-  // Fill estimates for Asymmetry dilution uncertainties - Table 36
-  static const Int_t LenXEstDilu = NumEst * (DiluUnc+1);
-  TString NamUncDilu[DiluUnc] = {
-    "jet pT resolution",
-    "jet angular resolution",
-    "charge mis-id",
-    "b/bbar response"
-  };
-  Double_t XEstDilu[LenXEstDilu]= {
-    -0.0060, 0.0024, 0.0015, 0.0001, 0.0001, 
-    -0.0012, 0.0065, 0.0029, 0.0010, 0.0000,
-     0.0041, 0.0002, 0.0001, 0.0004, 0.0000,
-    -0.0047, 0.0010, 0.0017, 0.0001, 0.0000,
-    -0.0085, 0.0025, 0.0019, 0.0011, 0.0000,
-    -0.0051, 0.0006, 0.0005, 0.0005, 0.0000
-  // Asym.   jet pT  angular charge  b/bbar 
+  // Fill estimates for dtG stat. uncertainty
+  Double_t XEstStatdtG[LenXEstStat] = {
+    -0.4132, 0.4594,
+    -0.1756, 0.5861,
+     0.2086, 0.2955,
+    -0.3778, 0.5482,
+    -0.8321, 0.7496,
+    -0.4261, 0.3187
   };
 
-  // Fill estimates for Asymmetry syst.  uncertainties
-  static const Int_t LenXEstSyst = NumEst * (SystUnc+1);
-  TString NamUncSyst[SystUnc] = {
-    "Luminosity",
-    "Pile Up",
+  // Fill estimates for Asymmetry dilution uncertainties - Table 36
+  static const Int_t LenXEstEDilu = 2 * NumEst * (StatUnc + EDiluUnc + 1);
+  TString NamUncEDilu[EDiluUnc+1] = {
+    "stat.",
+    "jet pT",
+    "jet ang.",
+    "charge",
+    "b/bbar"
+  };
+  Double_t XEstEDilu[LenXEstEDilu]= {
+    -0.0060, 0.0058, 0.0024, 0.0015, 0.0001, 0.0001, 
+    -0.0012, 0.0083, 0.0065, 0.0029, 0.0010, 0.0000,
+     0.0041, 0.0037, 0.0002, 0.0001, 0.0004, 0.0000,
+    -0.0047, 0.0058, 0.0010, 0.0017, 0.0001, 0.0000,
+    -0.0085, 0.0083, 0.0025, 0.0019, 0.0011, 0.0000,
+    -0.0051, 0.0037, 0.0006, 0.0005, 0.0005, 0.0000
+  // Asym.   stat.   jet pT  jet ang.charge  b/bbar 
+  };
+
+  // Fill estimates for Asymmetry dilution uncertainties - Table 45, 46, 47
+  static const Int_t LenXEstADilu = 2 * NumEst * (StatUnc + ADiluUnc + 1);
+  TString NamUncADilu[ADiluUnc + 1] = {
+    "stat.",
+    "dilution"
+  };
+  Double_t XEstADilu[LenXEstADilu]= {
+    -0.0060, 0.0058, 0.0028, 
+    -0.0012, 0.0083, 0.0066,
+     0.0041, 0.0037, 0.0005,
+    -0.0047, 0.0058, 0.0020,
+    -0.0085, 0.0083, 0.0029,
+    -0.0051, 0.0037, 0.0007
+  // Asym.   stat.   dilution
+  };
+
+  // Fill estimates for dtG dilution uncertainties
+  Double_t XEstDiludtG[LenXEstADilu]= {
+    -0.4132, 0.4594, 0.2218,
+    -0.1756, 0.5861, 0.4546,
+     0.2086, 0.2955, 0.0398,
+    -0.3778, 0.5482, 0.1836,
+    -0.8321, 0.7496, 0.2556,
+    -0.4261, 0.3187, 0.0625
+  // dtG     stat.   dilution
+  };
+
+  // Fill estimates for Asymmetry sys. uncertainties - Table 42, 42, 44
+  static const Int_t LenXEstESyst = 2 * NumEst * (StatUnc + ESystUnc + 1);
+  TString NamUncESyst[ESystUnc + 1] = {
+    "stat.",
+    "Lumi.",
+    "PileUp",
     "PDF",
-    "Factorization and Renormalization",
-    "ME-PS matching",
+    "Fac/Re",
+    "ME-PS",
     "ISR",
     "FSR",
-    "Unerlying event",
-    "Color reconnection",
-    "top pT reweighting",
-    "Trigger SF",
-    "b-fragmentation",
-    "Semileptonic BR of B hadron",
-    "Hadronization model",
-    "Muon correction",
-    "Electron energy scale and smearing",
-    "Lepton ID",
-    "Lepton Iso",
+    "Unerly",
+    "Color",
+    "pT rew",
+    "Trigger",
+    "b-frag",
+    "B had",
+    "Had. model",
+    "Muon",
+    "Electron",
+    "LepID",
+    "LepIso",
     "JES",
     "JER",
-    "Unclustered energy of MET",
-    "BTagging Eff.",
-    "BTagging SF",
-    "Limited statistics of BG models"
+    "MET",
+    "BTagEff.",
+    "BTagSF",
+    "BG models"
   };
-  Double_t XEstSyst[LenXEstSyst]= {
-    -0.0060, 0.0000, 0.0002, 0.0019, 0.0002, 0.0035, 0.0033, 0.0019, 0.0055, 0.0045, 0.0000, 0.0000 ,0.0003, 0.0000, 0.0022, 0.0001, 0.0000, 0.0000, 0.0000, 0.0021, 0.0035, 0.0000, 0.0000, 0.0003, 0.0045,
-    -0.0012, 0.0000, 0.0017, 0.0003, 0.0002, 0.0029, 0.0022, 0.0024, 0.0047, 0.0021, 0.0000, 0.0005, 0.0000, 0.0011, 0.0001, 0.0000, 0.0013, 0.0003, 0.0000, 0.0039, 0.0033, 0.0000, 0.0000, 0.0005, 0.0063,
-     0.0041, 0.0000, 0.0001, 0.0003, 0.0002, 0.0023, 0.0011, 0.0005, 0.0011, 0.0013, 0.0000, 0.0003, 0.0000, 0.0006, 0.0000, 0.0002, 0.0007, 0.0000, 0.0000, 0.0005, 0.0000, 0.0000, 0.0000, 0.0000, 0.0009,
-    -0.0047, 0.0000, 0.0013, 0.0003, 0.0006, 0.0008, 0.0012, 0.0007, 0.0015, 0.0039, 0.0000, 0.0003, 0.0001, 0.0005, 0.0000, 0.0002, 0.0000, 0.0000, 0.0000, 0.0002, 0.0023, 0.0000, 0.0000, 0.0003, 0.0045,
-    -0.0085, 0.0000, 0.0002, 0.0003, 0.0002, 0.0028, 0.0015, 0.0033, 0.0030, 0.0054, 0.0001, 0.0004, 0.0001, 0.0028, 0.0001, 0.0000, 0.0029, 0.0002, 0.0000, 0.0036, 0.0019, 0.0000, 0.0000, 0.0001, 0.0063,
-    -0.0051, 0.0000, 0.0001, 0.0004, 0.0002, 0.0015, 0.0003, 0.0012, 0.0023, 0.0009, 0.0000, 0.0001, 0.0001, 0.0002, 0.0000, 0.0003, 0.0004, 0.0000, 0.0000, 0.0006, 0.0001, 0.0000, 0.0000, 0.0000, 0.0009
-  // Asym.   Lumi    PileUp  PDF     Fac/Re  ME-PS   ISR     FSR     Under   Color   pT rew  Trigger b-frag  B-had   Had.    Muon    Elec    LepID   LepIso  JES     JER     MET     bTagEff bTagSF  BG
+  Double_t XEstESyst[LenXEstESyst]= {
+    -0.0060, 0.0058, 0.0000, 0.0002, 0.0019, 0.0002, 0.0035, 0.0033, 0.0019, 0.0055, 0.0045, 0.0000, 0.0000 ,0.0003, 0.0000, 0.0022, 0.0001, 0.0000, 0.0000, 0.0000, 0.0021, 0.0035, 0.0000, 0.0000, 0.0003, 0.0045,
+    -0.0012, 0.0083, 0.0000, 0.0017, 0.0003, 0.0002, 0.0029, 0.0022, 0.0024, 0.0047, 0.0021, 0.0000, 0.0005, 0.0000, 0.0011, 0.0001, 0.0000, 0.0013, 0.0003, 0.0000, 0.0039, 0.0033, 0.0000, 0.0000, 0.0005, 0.0063,
+     0.0041, 0.0037, 0.0000, 0.0001, 0.0003, 0.0002, 0.0023, 0.0011, 0.0005, 0.0011, 0.0013, 0.0000, 0.0003, 0.0000, 0.0006, 0.0000, 0.0002, 0.0007, 0.0000, 0.0000, 0.0005, 0.0000, 0.0000, 0.0000, 0.0000, 0.0009,
+    -0.0047, 0.0058, 0.0000, 0.0013, 0.0003, 0.0006, 0.0008, 0.0012, 0.0007, 0.0015, 0.0039, 0.0000, 0.0003, 0.0001, 0.0005, 0.0000, 0.0002, 0.0000, 0.0000, 0.0000, 0.0002, 0.0023, 0.0000, 0.0000, 0.0003, 0.0045,
+    -0.0085, 0.0083, 0.0000, 0.0002, 0.0003, 0.0002, 0.0028, 0.0015, 0.0033, 0.0030, 0.0054, 0.0001, 0.0004, 0.0001, 0.0028, 0.0001, 0.0000, 0.0029, 0.0002, 0.0000, 0.0036, 0.0019, 0.0000, 0.0000, 0.0001, 0.0063,
+    -0.0051, 0.0037, 0.0000, 0.0001, 0.0004, 0.0002, 0.0015, 0.0003, 0.0012, 0.0023, 0.0009, 0.0000, 0.0001, 0.0001, 0.0002, 0.0000, 0.0003, 0.0004, 0.0000, 0.0000, 0.0006, 0.0001, 0.0000, 0.0000, 0.0000, 0.0009
+  // Asym.   stat.   Lumi    PileUp  PDF     Fac/Re  ME-PS   ISR     FSR     Under   Color   pT rew  Trigger b-frag  B-had   Had.    Muon    Elec    LepID   LepIso  JES     JER     MET     bTagEff bTagSF  BG
+  };
+
+  // Fill estimates for Asymmetry sys. uncertainties - Table 45, 46, 47
+  static const Int_t LenXEstASyst = 2 * NumEst * (StatUnc + ASystUnc + 1);
+  TString NamUncASyst[ASystUnc + 1] = {
+    "stat.",
+    "sys."
+  };
+  Double_t XEstASyst[LenXEstASyst]= {
+    -0.0060, 0.0058, 0.0111, 
+    -0.0012, 0.0083, 0.0095,
+     0.0041, 0.0037, 0.0028,
+    -0.0047, 0.0058, 0.0064,
+    -0.0085, 0.0083, 0.0108,
+    -0.0051, 0.0037, 0.0029
+  // Asym.   stat.   sys.
+  };
+
+  // Fill estimates for dtG sys. uncertainties
+  Double_t XEstSystdtG[LenXEstASyst]= {
+    -0.4132, 0.4594, 0.8646,
+    -0.1756, 0.5861, 0.6543,
+     0.2086, 0.2955, 0.2204,
+    -0.3778, 0.5482, 0.5895,
+    -0.8321, 0.7496, 0.9455,
+    -0.4261, 0.3187, 0.2515
+  // dtg     stat.   sys.
   };
 
   // Fill estimates for Asymmetry all uncertainties
-  static const Int_t LenXEstAll = NumEst * (StatUnc + DiluUnc + SystUnc + 1);
-  TString NamUncAll[29] = {
-    "statistic",
-    "jet pT resolution",
-    "jet angular resolution",
-    "charge mis-id",
-    "b/bbar response"
-    "Luminosity",
-    "Pile Up",
+  static const Int_t LenXEstEAll = 2 * NumEst * (StatUnc + EDiluUnc + ESystUnc + 1);
+  TString NamUncEAll[StatUnc + EDiluUnc + ESystUnc] = {
+    "stat.",
+    "jet pT",
+    "jet ang.",
+    "charge",
+    "b/bbar",
+    "Lumi.",
+    "PileUp",
     "PDF",
-    "Factorization and Renormalization",
-    "ME-PS matching",
+    "Fac/Re",
+    "ME-PS",
     "ISR",
     "FSR",
-    "Unerlying event",
-    "Color reconnection",
-    "top pT reweighting",
-    "Trigger SF",
-    "b-fragmentation",
-    "Semileptonic BR of B hadron",
-    "Hadronization model",
-    "Muon correction",
-    "Electron energy scale and smearing",
-    "Lepton ID",
-    "Lepton Iso",
+    "Unerly",
+    "Color",
+    "pT rew",
+    "Trigger",
+    "b-frag",
+    "B had",
+    "Had. model",
+    "Muon",
+    "Electron",
+    "LepID",
+    "LepIso",
     "JES",
     "JER",
-    "Unclustered energy of MET",
-    "BTagging Eff.",
-    "BTagging SF",
-    "Limited statistics of BG models"
+    "MET",
+    "BTagEff.",
+    "BTagSF",
+    "BG models"
   };
-  Double_t XEstAll[LenXEstAll]= {
+  Double_t XEstEAll[LenXEstEAll]= {
     -0.0060, 0.0058, 0.0024, 0.0015, 0.0001, 0.0001, 0.0000, 0.0002, 0.0019, 0.0002, 0.0035, 0.0033, 0.0019, 0.0055, 0.0045, 0.0000, 0.0000 ,0.0003, 0.0000, 0.0022, 0.0001, 0.0000, 0.0000, 0.0000, 0.0021, 0.0035, 0.0000, 0.0000, 0.0003, 0.0045,
     -0.0012, 0.0083, 0.0065, 0.0029, 0.0010, 0.0000, 0.0000, 0.0017, 0.0003, 0.0002, 0.0029, 0.0022, 0.0024, 0.0047, 0.0021, 0.0000, 0.0005, 0.0000, 0.0011, 0.0001, 0.0000, 0.0013, 0.0003, 0.0000, 0.0039, 0.0033, 0.0000, 0.0000, 0.0005, 0.0063,
      0.0041, 0.0037, 0.0002, 0.0001, 0.0004, 0.0000, 0.0000, 0.0001, 0.0003, 0.0002, 0.0023, 0.0011, 0.0005, 0.0011, 0.0013, 0.0000, 0.0003, 0.0000, 0.0006, 0.0000, 0.0002, 0.0007, 0.0000, 0.0000, 0.0005, 0.0000, 0.0000, 0.0000, 0.0000, 0.0009,
@@ -208,15 +300,40 @@ void B_AN2015_240(Int_t Flag = 0){
     -0.0051, 0.0037, 0.0006, 0.0005, 0.0005, 0.0000, 0.0000, 0.0001, 0.0004, 0.0002, 0.0015, 0.0003, 0.0012, 0.0023, 0.0009, 0.0000, 0.0001, 0.0001, 0.0002, 0.0000, 0.0003, 0.0004, 0.0000, 0.0000, 0.0006, 0.0001, 0.0000, 0.0000, 0.0000, 0.0009
   };
 
+  // Fill estimates for Asymmetry all uncertainties - Table 45, 46, 47
+  static const Int_t LenXEstAAll = 2 * NumEst * (StatUnc + ADiluUnc + ASystUnc + 1);
+  TString NamUncAAll[StatUnc + ADiluUnc + ASystUnc] = {
+    "stat.",
+    "dilution",
+    "sys."
+  };
+  Double_t XEstAAll[LenXEstAAll]= {
+    -0.0060, 0.0058, 0.0028, 0.0111, 
+    -0.0012, 0.0083, 0.0066, 0.0095,
+     0.0041, 0.0037, 0.0005, 0.0028,
+    -0.0047, 0.0058, 0.0020, 0.0064,
+    -0.0085, 0.0083, 0.0029, 0.0108,
+    -0.0051, 0.0037, 0.0007, 0.0029
+  // Asym.   stat.   dilu    sys.
+  };
+
+  // Fill estimates for dtG all uncertainties
+  Double_t XEstAlldtG[LenXEstAAll]= {
+    -0.4132, 0.4594, 0.2218, 0.8646,
+    -0.1756, 0.5861, 0.4546, 0.6543,
+     0.2086, 0.2955, 0.0398, 0.2204,
+    -0.3778, 0.5482, 0.1836, 0.5895,
+    -0.8321, 0.7496, 0.2556, 0.9455,
+    -0.4261, 0.3187, 0.0625, 0.2515
+  // dtG     stat.   dilu    sys.
+  };
+
   // Correlation Matrix for un-correlated uncertainty
   static const Int_t LenCor = NumEst * NumEst;
   Double_t UnCor[LenCor] = {
-    1.00, 0.00, 0.00, 0.00, 0.00, 0.00,
-    0.00, 1.00, 0.00, 0.00, 0.00, 0.00,
-    0.00, 0.00, 1.00, 0.00, 0.00, 0.00,
-    0.00, 0.00, 0.00, 1.00, 0.00, 0.00,
-    0.00, 0.00, 0.00, 0.00, 1.00, 0.00,
-    0.00, 0.00, 0.00, 0.00, 0.00, 1.00
+    1.00, 0.00, 0.00,
+    0.00, 1.00, 0.00,
+    0.00, 0.00, 1.00
   };
 
   // Construct Object
@@ -225,66 +342,81 @@ void B_AN2015_240(Int_t Flag = 0){
 
   // Fill all estimates
   Int_t ind = 0;
+  if(Flag3 == 3) ind = 3;
   for(Int_t i = 0; i<NumEst; i++){
-    if(Flag == 0){
-      myBlue->FillEst(i,&XEstCEDM[ind]);
-    }else if(Flag == 1){
-      myBlue->FillEst(i,&XEstStat[ind]);
-    }else if(Flag == 2 || Flag == 3){
-      myBlue->FillEst(i,&XEstDilu[ind]);
-      myBlue->FillNamUnc(NamUncDilu);
-    }else if(Flag == 4 || Flag == 5){
-      myBlue->FillEst(i,&XEstSyst[ind]);
-      myBlue->FillNamUnc(NamUncSyst);
+    if(Flag1 == 1){
+      if(Flag2 == 3){
+        myBlue->FillEst(i,&XEstStatdtG[ind]);
+      }else{
+        myBlue->FillEst(i,&XEstStat[ind]);
+      }
+    }else if(Flag1 == 2 || Flag1 == 3){
+      if(Flag2 == 1){
+        myBlue->FillEst(i,&XEstEDilu[ind]);
+        myBlue->FillNamUnc(NamUncEDilu);
+      }else if(Flag2 == 2){
+        myBlue->FillEst(i,&XEstADilu[ind]);
+        myBlue->FillNamUnc(NamUncADilu);
+      }else{
+        myBlue->FillEst(i,&XEstDiludtG[ind]);
+        myBlue->FillNamUnc(NamUncADilu);
+      }
+    }else if(Flag1 == 4 || Flag1 == 5){
+      if(Flag2 == 1){
+        myBlue->FillEst(i,&XEstESyst[ind]);
+        myBlue->FillNamUnc(NamUncESyst);
+      }else if(Flag2 == 2){
+        myBlue->FillEst(i,&XEstASyst[ind]);
+        myBlue->FillNamUnc(NamUncASyst);
+      }else{
+        myBlue->FillEst(i,&XEstSystdtG[ind]);
+        myBlue->FillNamUnc(NamUncASyst);
+      }
     }else{
-      myBlue->FillEst(i,&XEstAll[ind]);
-      myBlue->FillNamUnc(NamUncAll);
+      if(Flag2 == 1){
+        myBlue->FillEst(i,&XEstEAll[ind]);
+        myBlue->FillNamUnc(NamUncEAll);
+      }else if(Flag2 == 2){
+        myBlue->FillEst(i,&XEstAAll[ind]);
+        myBlue->FillNamUnc(NamUncAAll);
+      }else{
+        myBlue->FillEst(i,&XEstAlldtG[ind]);
+        myBlue->FillNamUnc(NamUncAAll);
+      }
     }
     ind = ind + NumUnc + 1;
-  }
+  };
 
   // Set names
   myBlue->FillNamEst(NamEst);
-  if(Flag == 0){
-    myBlue->FillNamObs(NamObsCEDM);
-  }else{
-    myBlue->FillNamObs(NamObsAsym);
-  }
+  myBlue->FillNamObs(&FlagName2[Flag2-1]);
 
   // Fill all Correlations
-  for(Int_t k = 0; k<NumUnc; k++){
-    if(Flag == 0 || Flag == 1 || Flag == 2 || Flag == 4 || Flag == 6){
+  myBlue->FillCor(0, &UnCor[0]);
+  for(Int_t k = 1; k<NumUnc; k++){
+    if(Flag1 == 2 || Flag1 == 4 || Flag1 == 6){
       myBlue->FillCor(k, &UnCor[0]);
-    }else if(Flag == 3 || Flag == 5){
+    }else if(Flag1 == 3 || Flag1 == 5 || Flag1 == 7){
       myBlue->FillCor(k, 1.0);
-    }else{
-      if(k == 1){
-        myBlue->FillCor(k, &UnCor[0]);
-      }else{
-        myBlue->FillCor(k, 1.0);
-      }
     }
-  }
+  };
 
   // Fix input and inspect input
   myBlue->FixInp();
   if(PrintLog){
     myBlue->PrintEst();
-    if(Flag == 0){
-      myBlue->PrintCor();
-      myBlue->PrintCov();
-      myBlue->PrintRho();
-    };
+    myBlue->PrintCor();
+    myBlue->PrintCov();
+    myBlue->PrintRho();
   };
 
   // Solve and inspect result
   myBlue->Solve();
-  printf("**************************************************************************************** \n");
-  printf("... B_AN2015_240: Calculate %s \n", FlagName[Flag].c_str());
-  printf("**************************************************************************************** \n");
+  printf("\n\n**************************************************************************************** \n");
+  printf("... B_AN2015_240: Calculate %s%s%s \n", FlagName3[Flag3-1].Data(),FlagName2[Flag2-1].Data(),FlagName1[Flag1-1].Data());
+  printf("**************************************************************************************** \n\n\n");
   myBlue->PrintResult();
-  printf("**************************************************************************************** \n");
-  if(Flag == 0 && PrintLog){
+  if(PrintLog){
     myBlue->PrintRhoRes();
   }
 

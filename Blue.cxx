@@ -3948,14 +3948,14 @@ void Blue::PrintResult() const {
     Int_t m = 0;
     for(Int_t n = 0; n<InpObsOrig; n++){
       if(IsActiveObs(n) == 1){
-	printf("%s = %5.3f = ",GetNamObs(n).Data(),XvaRes->operator()(m));
+	printf("%s = %5.4f = ",GetNamObs(n).Data(),XvaRes->operator()(m));
 	for(Int_t i = 0; i<InpEst; i++){
 	  if(i == 0){	  
-	    printf("%+5.3f * x%1i ",Lam->operator()(i,m),IsWhichEst(i));
+	    printf("%+5.4f * x%1i ",Lam->operator()(i,m),IsWhichEst(i));
 	  }else if(i<10){
-	    printf("+ %+5.3f * x%1i ",Lam->operator()(i,m),IsWhichEst(i));
+	    printf("+ %+5.4f * x%1i ",Lam->operator()(i,m),IsWhichEst(i));
 	  }else{
-	    printf("+ %+5.3f * x%2i ",Lam->operator()(i,m),IsWhichEst(i));
+	    printf("+ %+5.4f * x%2i ",Lam->operator()(i,m),IsWhichEst(i));
 	  }
 	}
 	m = m + 1;
@@ -3976,14 +3976,14 @@ void Blue::PrintResult() const {
     m = 0;
     for(Int_t n = 0; n<InpObsOrig; n++){
       if(IsActiveObs(n) == 1){
-	printf("%s = %5.3f +- %5.3f ",GetNamObs(n).Data(),XvaRes->operator()(m),
+	printf("%s = %5.4f +- %5.4f ",GetNamObs(n).Data(),XvaRes->operator()(m),
 	       sqrt(CovRes->operator()(m,m)));
 	if(InpUnc >= 2){     
 	  for(Int_t k = 0; k<InpUnc; k++){
 	    if(k == 0){
-	      printf("(%5.3f",CorRes->operator()(k*InpObs+m,k*InpObs+m));
+	      printf("(%5.4f",CorRes->operator()(k*InpObs+m,k*InpObs+m));
 	    }else{
-	      printf(" +- %5.3f",CorRes->operator()(k*InpObs+m,k*InpObs+m));
+	      printf(" +- %5.4f",CorRes->operator()(k*InpObs+m,k*InpObs+m));
 	    }
 	    if(k == InpUnc-1){printf(")\n");}	  	   
 	  }
@@ -3999,6 +3999,7 @@ void Blue::PrintResult() const {
     printf("... Blue->PrintResult: Breakdown in stat (k==0)");
     if(InpUnc > 1)printf("+ sys (all k>0)");
     printf("\n");
+    printf("\n\n**************************************************************************************** \n");
     printf(" Result =   Value (+-  stat");
     if(InpUnc > 1){printf(" +-  syst)");
     }else{printf(")");};
@@ -4008,20 +4009,21 @@ void Blue::PrintResult() const {
     for(Int_t n = 0; n<InpObsOrig; n++){
       SysUnc = 0;
       if(IsActiveObs(n) == 1){
-	printf("%s = %5.3f",GetNamObs(n).Data(),XvaRes->operator()(m));
+	printf("%s = %5.4f",GetNamObs(n).Data(),XvaRes->operator()(m));
 	for(Int_t k = 0; k<InpUnc; k++){
 	  if(k == 0){
-	    printf(" (+- %5.3f", CorRes->operator()(k*InpObs+m,k*InpObs+m));
+	    printf(" (+- %5.4f", CorRes->operator()(k*InpObs+m,k*InpObs+m));
 	    if(InpUnc == 1)printf(")");
 	  }else{
 	    SysUnc = SysUnc + CorRes->operator()(k*InpObs+m,k*InpObs+m) * CorRes->operator()(k*InpObs+m,k*InpObs+m);
 	    if(k == InpUnc-1){
-	      printf(" +- %5.3f)", TMath::Sqrt(SysUnc));
+	      printf(" +- %5.4f)", TMath::Sqrt(SysUnc));
 	    }
 	  }
 	}
-	printf(" = +- %5.3f",TMath::Sqrt(CovRes->operator()(m,m)));
+	printf(" = +- %5.4f",TMath::Sqrt(CovRes->operator()(m,m)));
 	printf("\n");
+        printf("**************************************************************************************** \n\n\n");
 	m = m + 1;
       }
     }     
